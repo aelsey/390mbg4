@@ -1,5 +1,6 @@
 package edu.umass.cs.client;
 
+import android.R.string;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -42,7 +43,7 @@ public class MainActivity extends Activity {
 	 * Various UI components 
 	 */
 	private TextView accelXView, accelYView, accelZView;
-	private TextView statusView, stepsView;
+	private TextView statusView, stepsView, activityView;
 	private CompoundButton accelButton;
 	
 	/**
@@ -99,9 +100,15 @@ public class MainActivity extends Activity {
             	if(accelButton!=null) {
             		accelButton.setChecked(false);
             		accelStarted = false;
+            		activityView.setText("");
             		statusView.setText("Accelerometer Stopped");
             	}
             	break;
+            }
+            case Context_Service.MSG_ACTIVITY_UPDATED:
+            {
+            	CharSequence data = msg.getData().getString("update");
+            	activityView.setText(msg.getData().getCharSequence("update"));
             }
             default:
                 super.handleMessage(msg);
@@ -146,6 +153,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main);
         
         //Setting up text views
+        activityView = (TextView) findViewById(R.id.ActivityView);
         statusView = (TextView) findViewById(R.id.StatusView);
         stepsView = (TextView) findViewById(R.id.StepCountView);
         accelXView = (TextView) findViewById(R.id.AccelXView);

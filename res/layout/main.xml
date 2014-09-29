@@ -62,8 +62,41 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
+
         <TextView
             android:id="@+id/StepCountView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:padding="10dip"
+            android:text=""
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+    
+    
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/StepsLayout"
+        android:layout_centerHorizontal="true"
+        android:background="#000000"
+        android:orientation="horizontal"
+        android:padding="5dip"> 
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="20dip"
+            android:padding="10dip"
+            android:text="@string/activity"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
+        
+        <TextView
+            android:id="@+id/ActivityView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"

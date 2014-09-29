@@ -3,6 +3,7 @@
     <string name="app_name">My Activities</string>
     <!-- Strings shown in UI  -->  
     <string name="status">Status</string>
+    <string name="activity">Activity</string>
     <string name="accel">Accelerometer</string>
     <string name="steps">Steps</string>
     <string name="nullvalue">&#8212;.&#8212;&#8212;</string>

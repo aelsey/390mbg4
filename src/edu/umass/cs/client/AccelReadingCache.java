@@ -3,79 +3,137 @@ import java.util.Queue;
 
 public class AccelReadingCache 
 {
-	private static final int defaultSize = 200;
-	private static final int calibration = defaultSize / 2;
-	private static final double magnitudeExponential = 10.0/defaultSize;
-	private static final double magnitudeThreshold = 1;//lower than this is probably walking
-	private static final double stepPeriodMillis = 300;
+	private static final long calibrationTime = 10000;
+	private long startTime;
 	
 	private int stepCount;
-	private double lastStep;
-	private int count;
 	
-	private axis dominant;
-	private axis x,
-				 y,
-				 z;
+	private static final double minimumStepThreshold = .8;
+	private static final double exponentialWeight = .1;
 	
-	private double[] lVec;
+	private static final int size = 1000;
+	private double[] accelMagnitude;
+	private int index = 0;
 	
-	private class axis{
-		double[] values = new double[defaultSize];
-		int index;
-		boolean increasing,
-				thresholdCrossed;
-		double min,
-			   magnitude,
-			   threshold;
-		
-		boolean detectStep(double value){
-			if(increasing && value <= values[index]){
-				threshold = 
-						(values[index] + min)/2 * AccelReadingCache.magnitudeExponential 
-						 + threshold * (1 - AccelReadingCache.magnitudeExponential);
-				magnitude = values[index] - min;
-				increasing = false;
-				return false;
-			} else if(!increasing && value >= values[index]){
-				min = values[index];
-				increasing = true;
-			}
-			return thresholdCrossed = !increasing & values[index] > threshold & (values[incrementIndex()] = value) < threshold;
-		}
-		
-		int incrementIndex(){
-			return index = (index + 1) % defaultSize;
-		}
-	}
+	private long lastStep;
+	private long weightedStepPeriod;
+	private long weightedStepPeriodA[];
+	private long weightedStepDeviationA[];
+	private int aIndex;
+	private int bIndex;
+	private long weightedStepDeviation;
+	private double weightedThreshold;
+	private double localMin;
+	private double humpMagnitude;
+	private boolean increasing;
 	
 	public AccelReadingCache()
 	{
-		this(defaultSize);
+		this(size);
 	}
 	
 	public AccelReadingCache(int size)
 	{
-		x = new axis();
-		y = new axis();
-		z = new axis();
-		
-		lVec = new double[defaultSize];
+		this.startTime = this.lastStep = System.currentTimeMillis();
+		this.accelMagnitude = new double[size];
 	}
 	
 	public AccelReadingCache updateCache(double x, double y, double z){
-		this.dominant = (this.x.magnitude > this.y.magnitude ? this.x : this.y);
-		this.dominant = this.dominant.magnitude > this.z.magnitude ? this.dominant : this.z;
+		double mag = Math.sqrt(x*x + y*y + z*z);
+		long now = System.currentTimeMillis();
 		
-		this.x.detectStep(x);
-		this.y.detectStep(y);
-		this.z.detectStep(z);
+		checkPeaks(mag);
 		
-		if(count++ > calibration && this.dominant.thresholdCrossed && this.dominant.magnitude > magnitudeThreshold && this.lastStep + stepPeriodMillis <= System.currentTimeMillis()){
-			stepCount++;
-			lastStep = System.currentTimeMillis();
-		}
+		if(detectSteps(mag, now))
+			adjustStep(now);
+		
 		return this;
+	}
+	
+	public void checkPeaks(double mag){
+		if(increasing && mag <= accelMagnitude[index]){
+			this.humpMagnitude = accelMagnitude[index] - localMin;
+			this.weightedThreshold = 
+					(this.localMin + this.humpMagnitude) * AccelReadingCache.exponentialWeight 
+					 + weightedThreshold * (1 - AccelReadingCache.exponentialWeight);
+			this.increasing = false;
+		} else if(!increasing && mag >= accelMagnitude[index]){
+			this.localMin = accelMagnitude[index];
+			this.increasing = true;
+		}
+	}
+	
+	public boolean detectSteps(double mag, long now){
+		boolean updateStepInfo = false;
+		
+		if(accelMagnitude[index] >= weightedThreshold && 
+				mag <= weightedThreshold &&
+				mag > AccelReadingCache.minimumStepThreshold &&
+				this.humpMagnitude > AccelReadingCache.minimumStepThreshold)
+		{
+			if(!isCalibrating(now) &&
+			   this.lastStep + this.weightedStepPeriod - this.weightedStepDeviation * 1.2 <= now)
+			{
+				updateStepInfo = true;
+				this.stepCount++;
+			}
+			else if(isCalibrating(now))
+			{
+				updateStepInfo = true;
+			}
+		}
+		
+		accelMagnitude[(index = (index + 1) % accelMagnitude.length)] = mag;
+		
+		return updateStepInfo;
+	}
+	
+	public void adjustStep(long now){
+		double factor = (isCalibrating(now) ? 2.5 : 1.0) * AccelReadingCache.exponentialWeight;
+		if(this.weightedStepPeriodA == null){
+			weightedStepPeriodA = new long[1000];
+			weightedStepDeviationA = new long[1000];
+		}
+		
+		weightedStepDeviation = 
+				(long) Math.sqrt(
+						Math.pow(now - this.lastStep - this.weightedStepPeriod, 2) * factor +
+						Math.pow(this.weightedStepDeviation, 2) * (1 - factor)
+				);
+		long w = now - lastStep;
+		long p = (long) (w * factor);
+		long d = (long) ((long) (this.weightedStepPeriod) * (1 - factor));
+		long c = p + d;
+		this.weightedStepPeriod = 
+				(long) (((now - lastStep) * factor) +
+				(this.weightedStepPeriod * (1 - factor)));
+
+		weightedStepDeviationA[bIndex++] = now - this.lastStep - weightedStepPeriod;
+		this.lastStep = now;
+		weightedStepPeriodA[aIndex++] = weightedStepPeriod;
+	}
+	
+	public String toString(){
+		long now = System.currentTimeMillis();
+		return isCalibrating(System.currentTimeMillis()) ? 
+					"Calibrating for " + calibrationTime(now) + " secs.\n Please walk!" :
+			   isStopped(now) ? 
+					"Stopped" :
+				    "Walking";
+				  
+			
+	}
+	
+	public boolean isStopped(long now){
+		return this.lastStep + 3000 <= now;
+	}
+	
+	public double calibrationTime(long now){
+		return isCalibrating(now) ? (this.startTime + AccelReadingCache.calibrationTime - now)/1000.0 : 0.0;
+	}
+	
+	public boolean isCalibrating(long now){
+		return now <= this.startTime + AccelReadingCache.calibrationTime;
 	}
 	
 	public int getStepCount(){

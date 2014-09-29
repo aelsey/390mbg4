@@ -58,6 +58,7 @@ public class Context_Service extends Service implements SensorEventListener{
 	static final int MSG_STOP_ACCELEROMETER = 7;
 	static final int MSG_ACCELEROMETER_STARTED = 8;
 	static final int MSG_ACCELEROMETER_STOPPED = 9;
+	static final int MSG_ACTIVITY_UPDATED = 0xA;
 
 	static Context_Service sInstance = null;
 	private static boolean isRunning = false;
@@ -170,6 +171,20 @@ public class Context_Service extends Service implements SensorEventListener{
 
 			} catch (RemoteException e) {
 				// The client is dead. Remove it from the list; we are going through the list from back to front so this is safe to do inside the loop.
+				mClients.remove(i);
+			}
+		}
+	}
+	
+	private void sendUpdatedActivityToUI() {
+		for (int i = mClients.size()-1; i>=0; i--) {
+			try {
+				Bundle b = new Bundle();
+				b.putString("update", cache.toString());
+				Message msg = Message.obtain(null, MSG_ACTIVITY_UPDATED);
+				msg.setData(b);
+				mClients.get(i).send(msg);
+			} catch (RemoteException e) {
 				mClients.remove(i);
 			}
 		}
@@ -296,6 +311,7 @@ public class Context_Service extends Service implements SensorEventListener{
 			//Now, increment 'stepCount' variable if you detect any steps here
 			stepCount = cache.updateCache(filtAcc[0], filtAcc[1], filtAcc[2]).getStepCount(); 
 			//detectSteps() is not implemented 
+			sendUpdatedActivityToUI();
 			sendUpdatedStepCountToUI();
 			
 		}
