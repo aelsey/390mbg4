@@ -20,7 +20,9 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import edu.umass.cs.accelerometer.Filter;
+import edu.umass.cs.accelerometer.*;
+import weka.classifiers.*;
+
 
 /**
  * 
@@ -59,6 +61,15 @@ public class Context_Service extends Service implements SensorEventListener{
 	static final int MSG_ACCELEROMETER_STARTED = 8;
 	static final int MSG_ACCELEROMETER_STOPPED = 9;
 	static final int MSG_ACTIVITY_UPDATED = 0xA;
+	
+	/**
+	* Class to orient axis
+	*/
+	private ReorientAxis orienter = null;
+	/**
+	* Feature extractor
+	*/
+	private ActivityFeatureExtractor extractor = null;
 
 	static Context_Service sInstance = null;
 	private static boolean isRunning = false;
@@ -109,6 +120,13 @@ public class Context_Service extends Service implements SensorEventListener{
 				filter = new Filter(CUTOFF_FREQUENCY);
 				cache = new AccelReadingCache();
 				stepCount = 0;
+				//The following needs to be added 
+				//Set up orienter 
+				orienter = new ReorientAxis(); 
+				long WINDOW_IN_MILLISECONDS = 5000; //5seconds
+				//Set up a feature extractor that extracts features every 5 seconds
+				extractor = new ActivityFeatureExtractor(5000);
+
 				break;
 			}
 			case MSG_STOP_ACCELEROMETER:
@@ -120,6 +138,9 @@ public class Context_Service extends Service implements SensorEventListener{
 				showNotification();
 				//Free filter and step detector
 				//cache = null;
+				//The following needs to be added 
+				orienter = null; 
+				extractor = null;
 				filter = null;
 				break;
 			}
@@ -176,11 +197,11 @@ public class Context_Service extends Service implements SensorEventListener{
 		}
 	}
 	
-	private void sendUpdatedActivityToUI() {
+	private void sendUpdatedActivityToUI(String activity) {
 		for (int i = mClients.size()-1; i>=0; i--) {
 			try {
 				Bundle b = new Bundle();
-				b.putString("update", cache.toString());
+				b.putString("update", activity);
 				Message msg = Message.obtain(null, MSG_ACTIVITY_UPDATED);
 				msg.setData(b);
 				mClients.get(i).send(msg);
@@ -311,9 +332,35 @@ public class Context_Service extends Service implements SensorEventListener{
 			//Now, increment 'stepCount' variable if you detect any steps here
 			stepCount = cache.updateCache(filtAcc[0], filtAcc[1], filtAcc[2]).getStepCount(); 
 			//detectSteps() is not implemented 
-			sendUpdatedActivityToUI();
 			sendUpdatedStepCountToUI();
-			
+			//Add the following 
+			  long time = event.timestamp/1000000; //convert time to milliseconds from nanoseconds
+			  //Orient accelerometer
+			  double ortAcc[] = 
+			    orienter.getReorientedValues(accel[0], accel[1], accel[2]);
+			  
+			  //Extract Features now 
+			  Double features[] = extractor.extractFeatures(time, ortAcc[0], ortAcc[1],ortAcc[2], accel[0], accel[1], accel[2]);
+			  
+			  //Feature vector is not null only when it has buffered
+			  //at least 5 seconds of data
+			  
+			  if(features!=null) {
+			    //Classify 
+			    try{
+			      double classId = ActivityClassifier.classify(features);
+			  
+			      //TODO: 1. The activity labels below will depend on activities in your data set
+			      String activity = null;
+			      if(classId == 0.0) activity= "Walking";
+			      else if(classId == 1.0) activity = "Stationary";
+			      else if(classId == 2.0) activity = "Jumping";
+			      //TODO: 2. Send new activity label to UI
+			      sendUpdatedActivityToUI(activity);
+			    }catch(Exception e){
+			      e.printStackTrace();
+			    }
+			  }
 		}
 
 	}
