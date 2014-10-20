@@ -123,9 +123,9 @@ public class Context_Service extends Service implements SensorEventListener{
 				//The following needs to be added 
 				//Set up orienter 
 				orienter = new ReorientAxis(); 
-				long WINDOW_IN_MILLISECONDS = 5000; //5seconds
+				long WINDOW_IN_MILLISECONDS = 2500; //5seconds
 				//Set up a feature extractor that extracts features every 5 seconds
-				extractor = new ActivityFeatureExtractor(5000);
+				extractor = new ActivityFeatureExtractor(2500);
 
 				break;
 			}
@@ -352,9 +352,10 @@ public class Context_Service extends Service implements SensorEventListener{
 			  
 			      //TODO: 1. The activity labels below will depend on activities in your data set
 			      String activity = null;
-			      if(classId == 0.0) activity= "Walking";
-			      else if(classId == 1.0) activity = "Stationary";
-			      else if(classId == 2.0) activity = "Jumping";
+			      if(classId == 0.0) activity= "Running";
+			      else if(classId == 1.0) activity = "Driving";
+			      else if(classId == 2.0) activity = "Stationary";
+			      else if(classId == 3.0) activity = "Driving";
 			      //TODO: 2. Send new activity label to UI
 			      sendUpdatedActivityToUI(activity);
 			    }catch(Exception e){

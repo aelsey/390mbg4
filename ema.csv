@@ -1,14 +1,20 @@
-1413341158094,856,Activity Recognition,Is it the start or an end of the activity?,Start
-1413341158097,856,Activity Recognition,What type of activity are you performing?,Stationary
-1413341266264,857,Activity Recognition,Is it the start or an end of the activity?,Start
-1413341266269,857,Activity Recognition,What type of activity are you performing?,Stationary
-1413341575824,858,Activity Recognition,Is it the start or an end of the activity?,End
-1413341575826,858,Activity Recognition,What type of activity are you performing?,Stationary
-1413341576056,859,Activity Recognition,Is it the start or an end of the activity?,Start
-1413341576059,859,Activity Recognition,What type of activity are you performing?,Walking
-1413341576497,860,Activity Recognition,Is it the start or an end of the activity?,End
-1413341576501,860,Activity Recognition,What type of activity are you performing?,Walking
-1413341637554,861,Activity Recognition,Is it the start or an end of the activity?,Start
-1413341637557,861,Activity Recognition,What type of activity are you performing?,Jumping
-1413341713335,863,Activity Recognition,Is it the start or an end of the activity?,End
-1413341713337,863,Activity Recognition,What type of activity are you performing?,Jumping
+1413761894585,998,Activity Recognition,Is it the start or an end of the activity?,Start
+1413761894588,998,Activity Recognition,What type of activity are you performing?,Stationary
+1413762128180,999,Activity Recognition,Is it the start or an end of the activity?,End
+1413762128182,999,Activity Recognition,What type of activity are you performing?,Stationary
+1413762626990,1002,Activity Recognition,Is it the start or an end of the activity?,Start
+1413762626993,1002,Activity Recognition,What type of activity are you performing?,Walking
+1413762786717,1003,Activity Recognition,Is it the start or an end of the activity?,End
+1413762786719,1003,Activity Recognition,What type of activity are you performing?,Walking
+1413766073736,1004,Activity Recognition,Is it the start or an end of the activity?,Start
+1413766073740,1004,Activity Recognition,What type of activity are you performing?,Running
+1413766074409,1006,Activity Recognition,Is it the start or an end of the activity?,End
+1413766074411,1006,Activity Recognition,What type of activity are you performing?,Running
+1413766074698,1007,Activity Recognition,Is it the start or an end of the activity?,Start
+1413766074700,1007,Activity Recognition,What type of activity are you performing?,Running
+1413766145982,1008,Activity Recognition,Is it the start or an end of the activity?,End
+1413766145985,1008,Activity Recognition,What type of activity are you performing?,Running
+1413808166858,1023,Activity Recognition,Is it the start or an end of the activity?,Start
+1413808166887,1023,Activity Recognition,What type of activity are you performing?,Driving
+1413811031084,1026,Activity Recognition,Is it the start or an end of the activity?,End
+1413811031102,1026,Activity Recognition,What type of activity are you performing?,Driving

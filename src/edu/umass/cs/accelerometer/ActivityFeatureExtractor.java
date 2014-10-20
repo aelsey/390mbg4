@@ -430,9 +430,7 @@ public class ActivityFeatureExtractor {
 		LinkedList<String> labelList = new LinkedList<String>();
 
 		try{
-			System.out.println("YOLO0 " + emaFile);
 			BufferedReader br = new BufferedReader(new FileReader(emaFile));
-			System.out.println("WORKIN?");
 			String s = null;
 
 			//First read all the events
