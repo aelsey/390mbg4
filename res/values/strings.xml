@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">My Activities</string>
-    <!-- Strings shown in UI  -->  
+    <!-- Strings shown in UI  -->
+    <string name="visualize">Visualize Data</string>  
     <string name="status">Status</string>
     <string name="activity">Activity</string>
     <string name="accel">Accelerometer</string>
