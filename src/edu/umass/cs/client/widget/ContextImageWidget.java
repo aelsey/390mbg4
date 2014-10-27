@@ -109,21 +109,21 @@ public class ContextImageWidget extends WidgetBase
     
     public void setImage(String label){
     	if(label.equals("STATIONARY")){
-    		image_view.setImageResource(R.drawable.stat);
+    		image_view.setImageResource(R.drawable.running);
     	} else if(label.equals("DRIVE")){
-    		image_view.setImageResource(R.drawable.drive);
+    		image_view.setImageResource(R.drawable.stationary);
     	} else if(label.equals("WALK")){
-    		image_view.setImageResource(R.drawable.walk);
+    		image_view.setImageResource(R.drawable.walking);
     	}
     }
     
     public void setImage(int label){
     	if(label==0){
-    		image_view.setImageResource(R.drawable.stat);
+    		image_view.setImageResource(R.drawable.running);
     	} else if(label==2){
-    		image_view.setImageResource(R.drawable.drive);
+    		image_view.setImageResource(R.drawable.stationary);
     	} else if(label==1){
-    		image_view.setImageResource(R.drawable.walk);
+    		image_view.setImageResource(R.drawable.walking);
     	}
     }
 

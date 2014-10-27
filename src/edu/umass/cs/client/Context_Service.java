@@ -1,6 +1,8 @@
 package edu.umass.cs.client;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -86,6 +88,14 @@ public class Context_Service extends Service implements SensorEventListener{
 	 * Step count to be displayed in UI
 	 */
 	private int stepCount = 0;
+	
+	//
+	public static LinkedList<Float> accx_history = new LinkedList<Float>();
+	public static LinkedList<Float> accy_history = new LinkedList<Float>();
+	public static LinkedList<Float> accz_history = new LinkedList<Float>();
+	public static List<Integer> selected = new ArrayList<Integer>();
+	public static LinkedList<Integer> raw_activity_history;
+	
 	
 	//Messenger used by clients
 	final Messenger mMessenger = new Messenger(new IncomingHandler());
@@ -353,9 +363,8 @@ public class Context_Service extends Service implements SensorEventListener{
 			      //TODO: 1. The activity labels below will depend on activities in your data set
 			      String activity = null;
 			      if(classId == 0.0) activity= "Running";
-			      else if(classId == 1.0) activity = "Driving";
-			      else if(classId == 2.0) activity = "Stationary";
-			      else if(classId == 3.0) activity = "Driving";
+			      else if(classId == 1.0) activity = "Stationary";
+			      else if(classId == 2.0) activity = "Walking";
 			      //TODO: 2. Send new activity label to UI
 			      sendUpdatedActivityToUI(activity);
 			    }catch(Exception e){

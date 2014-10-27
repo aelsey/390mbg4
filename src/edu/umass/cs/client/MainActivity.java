@@ -14,6 +14,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.TextView;
@@ -32,6 +33,9 @@ public class MainActivity extends Activity {
 	 * Variable to check if accelerometer is running
 	 */
 	private boolean accelStarted = false;
+	
+	//button for visualization options
+	private CompoundButton vizButton;
 	
 	/**
 	 * Instance of this activity
@@ -175,6 +179,20 @@ public class MainActivity extends Activity {
         accelStarted = false;
         if(Context_Service.isAccelerometerRunning())
         	accelStarted = true;
+        
+        vizButton = (ToggleButton) findViewById(R.id.VisualizeButton);
+        vizButton.setChecked(false);
+        vizButton.setOnCheckedChangeListener(
+        		new OnCheckedChangeListener() {
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView,
+					boolean isChecked) {
+	        	Intent intent = new Intent(getApplicationContext(),ContextActivity.class);
+	        	intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+	        	startActivity(intent);
+			}
+        	}); 
+        
         
         //Set the buttons and the text accordingly
         accelButton = (ToggleButton) findViewById(R.id.StartButton);

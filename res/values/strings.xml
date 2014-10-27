@@ -8,6 +8,7 @@
     <string name="accel">Accelerometer</string>
     <string name="steps">Steps</string>
     <string name="nullvalue">&#8212;.&#8212;&#8212;</string>
+    <string name="action_pick">Select Activity</string>
     <string name="x">X</string>
     <string name="y">Y</string>
     <string name="z">Z</string>
