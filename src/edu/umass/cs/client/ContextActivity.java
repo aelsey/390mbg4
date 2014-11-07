@@ -16,14 +16,22 @@
 
 package edu.umass.cs.client;
 
+import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
-import edu.umass.cs.client.widget.ContinuousContextImageWidget;
-import edu.umass.cs.client.widget.ContextImageWidget;
-import edu.umass.cs.client.widget.WidgetBase;
+import lecho.lib.hellocharts.view.LineChartView;
+import lecho.lib.hellocharts.view.PieChartView;
+
+import edu.umass.cs.client.widget.LineDataChartView;
+import edu.umass.cs.client.widget.PieDataChartView;
+import edu.umass.cs.client.widget.DataChartView;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ListActivity;
 import android.content.ComponentName;
@@ -31,6 +39,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.graphics.Point;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -38,26 +48,31 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 
-public class ContextActivity extends ListActivity {
+import edu.umass.cs.client.PickerActivity.STREAMS;
+
+@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+public class ContextActivity extends ListActivity implements IDataObservable {
+	//maximum amount of allowed widgets
+	private static final Integer maxWidgets = 4;
 	
-	public static enum STREAMS {ACTIVITY
-//									,VOICE
-									,ACCX
-									,ACCY
-									,ACCZ
-								};
-	private WidgetBase[] widgets = new WidgetBase[STREAMS.values().length];
+	//because of the index hashing used in the original code, the length of this array
+	//can't be the size of the max widgets
+	private DataChartView[] widgets = new DataChartView[STREAMS.enumValues().length];
 	
 	private static final String TAG = "ContextActivity";
     
-	
 	// Datasource for the listview
     private ContextAdapter adapter;
     
@@ -68,7 +83,6 @@ public class ContextActivity extends ListActivity {
 	private boolean mIsBound;
 	//   Messenger receiving messages from the background service to update UI
 	private final Messenger mMessenger = new Messenger(new IncomingHandler());
-
     
     // Connection with the service
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -79,7 +93,6 @@ public class ContextActivity extends ListActivity {
             mIsBound = true;
         	sendMessageToService(Context_Service.MSG_REGISTER_CLIENT);
        		Log.d(TAG,"after registering client");
-
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -90,24 +103,16 @@ public class ContextActivity extends ListActivity {
             mService = null;
         }
     };
-
     
     @SuppressLint("HandlerLeak")
 	class IncomingHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
-        	if (widgets ==null) return;
             switch (msg.what) {
-	            case Context_Service.MSG_ACTIVITY_STATUS:
+	            case Context_Service.MSG_ACTIVITY_UPDATED:
 	            {
-	            	Log.d(TAG,"got message");
-	            	String activity = msg.getData().getString("activity");
-	            	Log.d(TAG,"activity:" + activity);
-	            	int state = getStateFromActivityString(activity);
-	            	if (widgets[STREAMS.ACTIVITY.ordinal()] !=null){
-	            		((ContextImageWidget)widgets[STREAMS.ACTIVITY.ordinal()]).history_view.add(state);
-	            		((ContextImageWidget)widgets[STREAMS.ACTIVITY.ordinal()]).setImage(state);
-	            	}
+	            	String data = msg.getData().getString("update");
+	            	ContextActivity.this.notifyWithData(STREAMS.valueOf(data.toString()), data.toString());	
 	            	break;
 	            }
 	            case Context_Service.MSG_ACCEL_VALUES:
@@ -115,16 +120,24 @@ public class ContextActivity extends ListActivity {
 	            	float accX = msg.getData().getFloat("accx");
 	            	float accY = msg.getData().getFloat("accy");
 	            	float accZ = msg.getData().getFloat("accz");
-	            	if (widgets[STREAMS.ACCX.ordinal()] !=null){
-	            		((ContextImageWidget)widgets[STREAMS.ACCX.ordinal()]).history_view.add(accX);
-	            	}
-	            	if (widgets[STREAMS.ACCY.ordinal()] !=null){
-	            		((ContextImageWidget)widgets[STREAMS.ACCY.ordinal()]).history_view.add(accY);
-	            	}
-	            	if (widgets[STREAMS.ACCZ.ordinal()] !=null){
-	            		((ContextImageWidget)widgets[STREAMS.ACCZ.ordinal()]).history_view.add(accZ);
-	            	}
+	            	//pass data to all widgets
+	            	ContextActivity.this.notifyWithData(STREAMS.ACCX, accX);
+	            	ContextActivity.this.notifyWithData(STREAMS.ACCY, accY);
+	            	ContextActivity.this.notifyWithData(STREAMS.ACCZ, accZ);
+	            	
 	            	break;
+	            }
+	            case Context_Service.MSG_FFT:
+	            {
+	            	for(STREAMS stream : STREAMS.getFFTStreams()){
+	            		ContextActivity.this.notifyWithData(stream, msg.getData().getDouble(stream.toString()));
+	            	}
+	            }
+	            case Context_Service.MSG_Dev:
+	            {
+	            	ContextActivity.this.notifyWithData(STREAMS.xDEV, msg.getData().getDouble(STREAMS.xDEV.toString()));
+	            	ContextActivity.this.notifyWithData(STREAMS.yDEV, msg.getData().getDouble(STREAMS.yDEV.toString()));
+	            	ContextActivity.this.notifyWithData(STREAMS.zDEV, msg.getData().getDouble(STREAMS.zDEV.toString()));
 	            }
 	            default:
 	                super.handleMessage(msg);
@@ -142,7 +155,6 @@ public class ContextActivity extends ListActivity {
         	bindService(new Intent(this, Context_Service.class), mConnection, Context.BIND_AUTO_CREATE);
         }
     }
-	
 	
     /**
      * This method is required to send a request to the background service.
@@ -162,24 +174,12 @@ public class ContextActivity extends ListActivity {
         }
     }
     
-    private int getStateFromActivityString(String label){
-    	if(label.equals("Running"))
-    		return 0;
-    	else if(label.equals("Stationary"))
-    		return 1;
-    	else if(label.equals("Walking"))
-    		return 2;
-    	return -1;
-    }
-    
-    
-    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setListAdapter(null);
         
-//        View view = this.getWindow().getDecorView();
+//        View view = this.getWindow().getDecorView();/
 //        view.setBackgroundColor(Color.WHITE);
     }
     
@@ -198,7 +198,7 @@ public class ContextActivity extends ListActivity {
         //Bind to the service if it is already running
         bindToServiceIfIsRunning();
         if(Context_Service.selected.size() > 0){
-        	widgets = new WidgetBase[STREAMS.values().length];
+        	widgets = new DataChartView[STREAMS.enumValues().length];
         	if (adapter ==null){
         		adapter = new ContextAdapter();
         		setListAdapter(adapter);
@@ -207,44 +207,40 @@ public class ContextActivity extends ListActivity {
         } 
     }
     
+    //reinstantiates all widgets currently 'selected'
     private void drawWidgets(){
     	List<Integer> selected = Context_Service.selected;
+    	STREAMS[] streams = STREAMS.enumValues();
+    	widgets = new DataChartView[STREAMS.enumValues().length];
+    	byte b = 0b0;
     	for(int i : selected){
-    		Log.d(TAG,"selected: " + i);
-    		switch(STREAMS.values()[i]){
-    			case ACTIVITY:
-    			    if (Context_Service.raw_activity_history == null) 
-    			   		Context_Service.raw_activity_history = new LinkedList<Integer>();
-    			   	widgets[i] = new ContextImageWidget(this,2,Context_Service.raw_activity_history);
-    			   	widgets[i].setTitle("Raw Activity: ");
-    			   	widgets[i].addOrRemoveTitleViewAsNecessary();
-    				break;
-    			case ACCX:
-    			    if (Context_Service.accx_history == null) 
-    			   		Context_Service.accx_history = new LinkedList<Float>();
-    			   	widgets[i] = new ContinuousContextImageWidget(this,-20,20,150,Context_Service.accx_history);
-    			   	widgets[i].setTitle(STREAMS.ACCX.toString());
-    			   	widgets[i].addOrRemoveTitleViewAsNecessary();
-    				break;
-    			case ACCY:
-    			    if (Context_Service.accy_history == null) 
-    			   		Context_Service.accy_history = new LinkedList<Float>();
-    			   	widgets[i] = new ContinuousContextImageWidget(this,-20,20,150,Context_Service.accy_history);
-    			   	widgets[i].setTitle(STREAMS.ACCY.toString());
-    			   	widgets[i].addOrRemoveTitleViewAsNecessary();
-    				break;
-    			case ACCZ:
-    			    if (Context_Service.accz_history == null) 
-    			   		Context_Service.accz_history = new LinkedList<Float>();
-    			   	widgets[i] = new ContinuousContextImageWidget(this,-20,20,150,Context_Service.accz_history);
-    			   	widgets[i].setTitle(STREAMS.ACCZ.toString());
-    			   	widgets[i].addOrRemoveTitleViewAsNecessary();
-    				break;
-    		}
+    		widgets[i] = streams[i].StreamToChartView(this, this);
+    		widgets[i].setId(b);
+    		
+    		ListView.LayoutParams params = new android.widget.AbsListView.LayoutParams(
+    				ListView.LayoutParams.MATCH_PARENT,
+    				getWidgetHeight()
+    		);
+    		widgets[i].setLayoutParams(params);
+    		//if(b > 1)
+    		//	((LayoutParams) params).addRule(Relat.BELOW, b << 1);
+    		widgets[i].requestLayout();
     	}
     }
+    
+    //used to partition the available height amongst the currently instantiated widgets
+    public int getWidgetHeight(){
+    	Point p = new Point();
+    	getWindowManager().getDefaultDisplay().getSize(p);
+    	int size = Context_Service.selected.size();
+    	//remove 150 for the list header...unsure of how to calculate the exact height of that
+    	int height = (int) (p.y - 150); 
+    	return size <= ContextActivity.getMaxWidgets() ? height / Context_Service.selected.size()	:
+    			height	/	ContextActivity.getMaxWidgets();
+    }
 
-    @Override
+    @SuppressLint("NewApi")
+	@Override
     public void onPause() {
     	if (mIsBound) {
         	sendMessageToService(Context_Service.MSG_UNREGISTER_CLIENT);
@@ -306,33 +302,57 @@ public class ContextActivity extends ListActivity {
         public long getItemId(int position) {
             return position;
         }
-        
-        private int getWidgetIndexFromPosition(int position){
-        	int index = -1, real = -1;
-        	while(real < position){
-        		if(widgets[++index] != null){
-        			real++;
-        		}
-        	}
-        	return index;
-        }
  
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            Log.v(TAG,"getView " + position + " " + convertView);
-            if (convertView == null) {
-                convertView = newView(position, getActivity());
-            } 
-            //todo:: insert code to update values of the convertView to fit the data 
-            // at position
-            return convertView;
-        }
-        
-        public View newView(int position, Context context) {
-    		return widgets[getWidgetIndexFromPosition(position)];
+        	if(convertView == null){
+            	int index = Context_Service.selected.get(position);
+            	if(ContextActivity.this.widgets[index]==null)
+            		ContextActivity.this.drawWidgets();//all widgets should be instantiated...so if any are missing for any reason, reinstantiate everything
+            	return widgets[index];
+            }
+            else return convertView;
         }
     }
-    private Activity getActivity(){
-    	return this;
-    }
+    
+/*
+ * Implementation of IDataObservable, see IDataObservable.java
+ * 
+ */
+Map<IDataObserverCache, List<STREAMS>> observers = new HashMap<IDataObserverCache, List<STREAMS>>();
+  	
+  	@Override
+  	public void register(IDataObserverCache observer, STREAMS... streams) {
+  		if(observers.containsKey(observer)){
+  			List<STREAMS> observerStream = observers.get(observer);
+  			for(STREAMS stream: streams){//could have used a set instead
+  				if(!observerStream.contains(stream))
+  					observerStream.add(stream);
+  			}
+  		}
+  		else observers.put(observer, Arrays.asList(streams));
+  	}
+
+  	@Override
+  	public void detach(IDataObserverCache observer, STREAMS... streams) {
+  		if(observers.containsKey(observer)){
+  			List<STREAMS> observerStream = observers.get(observer);
+  			for(STREAMS stream: streams){
+  				observerStream.remove(stream);
+  			}
+  		}
+  	}
+
+  	@Override
+  	public void notifyWithData(STREAMS stream, Object data) {
+  		for(IDataObserverCache obs: observers.keySet()){
+  			if(observers.get(obs).contains(stream)){
+  				obs.receive(stream, data);
+  			}
+  		}
+  	}
+
+	public static Integer getMaxWidgets() {
+		return maxWidgets;
+	}
 }

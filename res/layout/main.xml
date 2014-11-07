@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/MainLayout"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:focusableInTouchMode="true"
-    android:background="#000000"
+    android:clickable="true"
+    android:background="#FFFFFF"
     android:orientation="vertical" >
 
     <TextView
@@ -11,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:padding="10dip" />
+        android:padding="5dip" />
 
     <RelativeLayout
         android:id="@+id/StartButtonLayout"
@@ -19,7 +21,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/TopHorizontalSpaceView"
         android:layout_centerHorizontal="true"
-        android:background="#444444"
+        android:background="#FFFFFF"
         android:orientation="horizontal"
         android:padding="5dip" >
 
@@ -42,42 +44,76 @@
     </RelativeLayout>
     
     <RelativeLayout
-        android:id="@+id/VisualizeButtonLayout"
+        android:id="@+id/VisualizeMenuLayout"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/StartButtonLayout"
         android:layout_centerHorizontal="true"
-        android:background="#444444"
+        android:background="#FFFFFF"
         android:orientation="horizontal"
-        android:padding="5dip" >
-
+        android:padding="3dip">
+        
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_marginLeft="40dip"
+            android:layout_alignParentRight="true"
+            android:layout_marginLeft="20dip"
             android:padding="10dip"
-            android:text="@string/visualize"
+            android:text="@string/viz_menu_text"
             android:textSize="20sp"
             android:textStyle="bold" />
-
-        <ToggleButton
+            
+        <Button
             android:id="@+id/VisualizeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
+            android:text="@string/visualize"
+            android:layout_alignParentLeft="true"
             android:layout_marginRight="30dip" />
     </RelativeLayout>
-
+        
+    <RelativeLayout
+        android:id="@+id/VisualizeSpinnerLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="?android:attr/listPreferredItemHeight"
+    
+        android:layout_below="@id/VisualizeMenuLayout"
+        android:layout_centerHorizontal="true"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        android:padding="3dip" >
+        
+      	<TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginLeft="20dip"
+            android:padding="10dip"
+            android:text="@string/viz_spinner_text"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+      	
+        <Spinner
+        	android:id="@+id/VisualizeInline"
+        	android:layout_width="wrap_content"
+        	android:layout_height="fill_parent"
+        	android:layout_alignParentLeft="true"
+        	android:layout_marginLeft="30dip"
+        	android:layout_marginTop="0dip"
+        	android:layout_marginBottom="0dip"
+        	android:padding="0dip" />
+        	
+    </RelativeLayout>
+    
     <RelativeLayout
         android:id="@+id/StepsLayout"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/VisualizeButtonLayout"
+        android:layout_below="@id/VisualizeSpinnerLayout"
         android:layout_centerHorizontal="true"
-        android:background="#000000"
+        android:background="#FFFFFF"
         android:orientation="horizontal"
-        android:padding="5dip" >
+        android:padding="3dip" >
 
         <TextView
             android:layout_width="wrap_content"
@@ -109,9 +145,9 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/StepsLayout"
         android:layout_centerHorizontal="true"
-        android:background="#000000"
+        android:background="#FFFFFF"
         android:orientation="horizontal"
-        android:padding="5dip"> 
+        android:padding="3dip"> 
         
         <TextView
             android:layout_width="wrap_content"
@@ -123,16 +159,14 @@
             android:textSize="20sp"
             android:textStyle="bold"/>
         
-        <TextView
-            android:id="@+id/ActivityView"
+        <ImageView
+            android:id="@+id/ActivityImageView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:padding="10dip"
-            android:text=""
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:padding="10dip"/>
+            
     </RelativeLayout>
 
     <RelativeLayout
@@ -141,9 +175,9 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/ActivityLayout"
         android:layout_centerHorizontal="true"
-        android:background="#000000"
+        android:background="#FFFFFF"
         android:orientation="horizontal"
-        android:padding="5dip" >
+        android:padding="3dip" >
 
         <TextView
             android:layout_width="wrap_content"
@@ -169,13 +203,13 @@
 
     <RelativeLayout
         android:id="@+id/AccelLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/StatusLayout"
         android:layout_centerHorizontal="true"
-        android:background="#000000"
+        android:background="#FFFFFF"
         android:orientation="horizontal"
-        android:padding="5dip" >
+        android:padding="3dip" >
 
         <TextView
             android:id="@+id/XView"
@@ -244,4 +278,16 @@
             android:textStyle="bold" />
     </RelativeLayout>
 
+	<RelativeLayout
+    	android:id="@+id/VisualizeInlineView"
+    	android:layout_width="fill_parent"
+    	android:layout_height="100dip"
+    	android:layout_margin="3dip"
+    	
+        android:layout_below="@id/AccelLayout"
+        android:layout_centerHorizontal="true"
+        android:background="#AAAAAA"
+        android:orientation="horizontal"
+        android:clickable="true">
+    </RelativeLayout>
 </RelativeLayout>

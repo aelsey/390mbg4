@@ -1,8 +1,13 @@
 package edu.umass.cs.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
+import lecho.lib.hellocharts.view.LineChartView;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -23,6 +28,10 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import edu.umass.cs.accelerometer.*;
+import edu.umass.cs.client.PickerActivity.STREAMS;
+import edu.umass.cs.client.widget.DataChartView;
+import edu.umass.cs.client.widget.LineDataChartView;
+import edu.umass.cs.client.widget.PieDataChartView;
 import weka.classifiers.*;
 
 
@@ -33,8 +42,8 @@ import weka.classifiers.*;
  * @author CS390MB
  * 
  */
-public class Context_Service extends Service implements SensorEventListener{
-
+public class Context_Service extends Service implements SensorEventListener, IDataObservable{
+	
 	/**
 	 * Notification manager to display notifications
 	 */
@@ -63,6 +72,8 @@ public class Context_Service extends Service implements SensorEventListener{
 	static final int MSG_ACCELEROMETER_STARTED = 8;
 	static final int MSG_ACCELEROMETER_STOPPED = 9;
 	static final int MSG_ACTIVITY_UPDATED = 0xA;
+	static final int MSG_FFT = 0xB;
+	static final int MSG_Dev = 0xF;
 	
 	/**
 	* Class to orient axis
@@ -130,12 +141,11 @@ public class Context_Service extends Service implements SensorEventListener{
 				filter = new Filter(CUTOFF_FREQUENCY);
 				cache = new AccelReadingCache();
 				stepCount = 0;
-				//The following needs to be added 
-				//Set up orienter 
+				
 				orienter = new ReorientAxis(); 
 				long WINDOW_IN_MILLISECONDS = 2500; //5seconds
 				//Set up a feature extractor that extracts features every 5 seconds
-				extractor = new ActivityFeatureExtractor(2500);
+				extractor = new ActivityFeatureExtractor(2000);
 
 				break;
 			}
@@ -166,6 +176,29 @@ public class Context_Service extends Service implements SensorEventListener{
 			try {
 				// Send message value
 				mClients.get(i).send(Message.obtain(null, message));
+			} catch (RemoteException e) {
+				// The client is dead. Remove it from the list; we are going through the list from back to front so this is safe to do inside the loop.
+				mClients.remove(i);
+			}
+		}
+	}
+	
+	private void sendFFTToUI(double[] values, STREAMS[] fftStreams){
+		for (int i=mClients.size()-1; i>=0; i-- ) {
+			try {
+				
+				//why is the bundle/msg nested in here?
+				//can they be reused?
+				//otherwise very inefficient
+				Bundle b = new Bundle();
+				for(int c = 0;c<values.length;c++)
+				{
+					b.putDouble(fftStreams[c].toString(), values[c]);
+				}
+				Message msg = Message.obtain(null, MSG_FFT);
+				msg.setData(b);
+				mClients.get(i).send(msg);
+
 			} catch (RemoteException e) {
 				// The client is dead. Remove it from the list; we are going through the list from back to front so this is safe to do inside the loop.
 				mClients.remove(i);
@@ -230,10 +263,6 @@ public class Context_Service extends Service implements SensorEventListener{
 	public IBinder onBind(Intent intent) {
 		return mMessenger.getBinder();
 	}
-
-
-	
-	
 
 	//Start service automatically if we reboot the phone
 	public static class Context_BGReceiver extends BroadcastReceiver {
@@ -343,6 +372,7 @@ public class Context_Service extends Service implements SensorEventListener{
 			stepCount = cache.updateCache(filtAcc[0], filtAcc[1], filtAcc[2]).getStepCount(); 
 			//detectSteps() is not implemented 
 			sendUpdatedStepCountToUI();
+			
 			//Add the following 
 			  long time = event.timestamp/1000000; //convert time to milliseconds from nanoseconds
 			  //Orient accelerometer
@@ -351,6 +381,34 @@ public class Context_Service extends Service implements SensorEventListener{
 			  
 			  //Extract Features now 
 			  Double features[] = extractor.extractFeatures(time, ortAcc[0], ortAcc[1],ortAcc[2], accel[0], accel[1], accel[2]);
+			  if(features != null){
+				  double[] fftVals = {
+					features[3],
+					features[4],
+					features[5],
+					features[6],
+					
+					features[12],
+					features[13],
+					features[14],
+					features[15],
+					
+					features[21],
+					features[22],
+					features[23],
+					features[24]
+				  };
+				
+				  sendFFTToUI(fftVals, STREAMS.getFFTStreams());
+				  
+				  double[] axisDevs = {
+					features[1],
+					features[10],
+					features[19]
+				  };
+				  
+				  sendDevsToUI(axisDevs);
+			  }
 			  
 			  //Feature vector is not null only when it has buffered
 			  //at least 5 seconds of data
@@ -362,9 +420,9 @@ public class Context_Service extends Service implements SensorEventListener{
 			  
 			      //TODO: 1. The activity labels below will depend on activities in your data set
 			      String activity = null;
-			      if(classId == 0.0) activity= "Running";
-			      else if(classId == 1.0) activity = "Stationary";
-			      else if(classId == 2.0) activity = "Walking";
+			      if(classId == 0.0) activity= "RUNNING";
+			      else if(classId == 1.0) activity = "STATIONARY";
+			      else if(classId == 2.0) activity = "WALKING";
 			      //TODO: 2. Send new activity label to UI
 			      sendUpdatedActivityToUI(activity);
 			    }catch(Exception e){
@@ -373,5 +431,68 @@ public class Context_Service extends Service implements SensorEventListener{
 			  }
 		}
 
+	}
+	
+	private void sendDevsToUI(double[] axisDevs) {
+		for (int i=mClients.size()-1; i>=0; i-- ) {
+			try {
+				//Send Step Count
+				Bundle b = new Bundle();
+				b.putDouble(STREAMS.xDEV.toString(), axisDevs[0]);
+				b.putDouble(STREAMS.yDEV.toString(), axisDevs[1]);
+				b.putDouble(STREAMS.zDEV.toString(), axisDevs[2]);
+				
+				Message msg = Message.obtain(null, MSG_Dev);
+				msg.setData(b);
+				mClients.get(i).send(msg);
+
+			} catch (RemoteException e) {
+				// The client is dead. Remove it from the list; we are going through the list from back to front so this is safe to do inside the loop.
+				mClients.remove(i);
+			}
+		}
+	}
+
+	//Map<IDataObserverCache, List<Integer>> observers = new HashMap<IDataObserverCache, List<Integer>>();
+	List<IDataObserverCache> observers = new LinkedList<IDataObserverCache>();
+	
+	@Override
+	public void register(IDataObserverCache observer, STREAMS... streams) {
+		/*if(observers.containsKey(observer)){
+			List<Integer> observerStream = observers.get(observer);
+			for(Integer stream: streams){//could have used a set instead
+				if(!observerStream.contains(stream))
+					observerStream.add(stream);
+			}
+		}
+		else observers.put(observer, Arrays.asList(streams));*/
+		if(!observers.contains(observer))
+			observers.add(observer);
+	}
+
+	@Override
+	public void detach(IDataObserverCache observer, STREAMS... streams) {
+		/*if(observers.containsKey(observer)){
+			List<Integer> observerStream = observers.get(observer);
+			for(Integer stream: streams){
+				observerStream.remove(stream);
+			}
+		}*/
+		observers.remove(observer);
+	}
+
+	@Override
+	public void notifyWithData(STREAMS stream, Object data) {
+		/*for(IDataObserverCache obs: observers.keySet()){
+			if(observers.get(obs).contains(stream)){
+				obs.receive(stream, data);
+			}
+		}*/
+		
+		for(IDataObserverCache obs: observers){
+			if(obs.getStreams().contains(stream)){
+				obs.receive(stream, data);
+			}
+		}
 	}
 }

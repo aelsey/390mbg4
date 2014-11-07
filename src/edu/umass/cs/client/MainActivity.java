@@ -1,5 +1,15 @@
 package edu.umass.cs.client;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import edu.umass.cs.client.PickerActivity.STREAMS;
+import edu.umass.cs.client.widget.DataChartView;
+
+import lecho.lib.hellocharts.view.LineChartView;
 import android.R.string;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -15,11 +25,21 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+
+import edu.umass.cs.client.PickerActivity.STREAMS;
 
 /**
  * <p>The first activity/UI visible upon launching the application
@@ -27,7 +47,7 @@ import android.widget.ToggleButton;
  * @author CS390MB
  * 
  */
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements IDataObservable, OnItemSelectedListener {
     
 	
 	/** 
@@ -36,7 +56,14 @@ public class MainActivity extends Activity {
 	private boolean accelStarted = false;
 	
 	//button for visualization options
-	private CompoundButton vizButton;
+	private Button vizButton;
+	
+	//spinner to display the visualizer on the primary tab
+	private Spinner vizInlineSpinner;
+	
+	//view to display activity on primary tab when a spinner choice is selected
+	private RelativeLayout vizInlineView;
+	
 	
 	/**
 	 * Instance of this activity
@@ -48,7 +75,9 @@ public class MainActivity extends Activity {
 	 * Various UI components 
 	 */
 	private TextView accelXView, accelYView, accelZView;
-	private TextView statusView, stepsView, activityView;
+	private TextView statusView, stepsView;
+
+	ImageView activityView;
 	private CompoundButton accelButton;
 	
 	/**
@@ -64,6 +93,17 @@ public class MainActivity extends Activity {
      */
 	private final Messenger mMessenger = new Messenger(new IncomingHandler());
     
+	//borrowing this function from example code
+    public void setImage(String label){
+    	ImageView image = (ImageView)findViewById(R.id.ActivityImageView);
+    	if(label.equals(STREAMS.RUNNING.toString()))
+    		image.setImageResource(R.drawable.running);
+    	else if(label.equals(STREAMS.STATIONARY.toString()))
+    		image.setImageResource(R.drawable.stationary);
+    	else if(label.equals(STREAMS.WALKING.toString()))
+    		image.setImageResource(R.drawable.walking);
+    }
+	
     /**
      * Handler to handle incoming messages
      */
@@ -88,8 +128,26 @@ public class MainActivity extends Activity {
             	float accX = msg.getData().getFloat("accx");
             	float accY = msg.getData().getFloat("accy");
             	float accZ = msg.getData().getFloat("accz");
+            	//pass data to all registed listeners
+            	MainActivity.this.notifyWithData(STREAMS.ACCX, accX);
+            	MainActivity.this.notifyWithData(STREAMS.ACCY, accY);
+            	MainActivity.this.notifyWithData(STREAMS.ACCZ, accZ);
             	activity.setAccelValues(accX,accY,accZ);
             	break;
+            }
+            case Context_Service.MSG_FFT:
+            {
+            	for(STREAMS stream : STREAMS.getFFTStreams()){
+            		Bundle b = msg.getData();
+            		Double d = b.getDouble(stream.toString());
+            		MainActivity.this.notifyWithData(stream, msg.getData().getDouble(stream.toString()));
+            	}
+            }
+            case Context_Service.MSG_Dev:
+            {
+            	MainActivity.this.notifyWithData(STREAMS.xDEV, msg.getData().getDouble(STREAMS.xDEV.toString()));
+            	MainActivity.this.notifyWithData(STREAMS.yDEV, msg.getData().getDouble(STREAMS.yDEV.toString()));
+            	MainActivity.this.notifyWithData(STREAMS.zDEV, msg.getData().getDouble(STREAMS.zDEV.toString()));
             }
             case Context_Service.MSG_ACCELEROMETER_STARTED:
             {
@@ -105,7 +163,7 @@ public class MainActivity extends Activity {
             	if(accelButton!=null) {
             		accelButton.setChecked(false);
             		accelStarted = false;
-            		activityView.setText("");
+            		activityView.setImageDrawable(null);
             		statusView.setText("Accelerometer Stopped");
             	}
             	break;
@@ -113,7 +171,9 @@ public class MainActivity extends Activity {
             case Context_Service.MSG_ACTIVITY_UPDATED:
             {
             	CharSequence data = msg.getData().getString("update");
-            	activityView.setText(msg.getData().getCharSequence("update"));
+            	//pass data to all registered listeners
+            	MainActivity.this.notifyWithData(STREAMS.valueOf(data.toString()), data.toString());
+            	setImage(msg.getData().getCharSequence("update").toString());
             }
             default:
                 super.handleMessage(msg);
@@ -157,8 +217,8 @@ public class MainActivity extends Activity {
         //Set Layout
         setContentView(R.layout.main);
         
-        //Setting up text views
-        activityView = (TextView) findViewById(R.id.ActivityView);
+        activityView = (ImageView) findViewById(R.id.ActivityImageView);
+
         statusView = (TextView) findViewById(R.id.StatusView);
         stepsView = (TextView) findViewById(R.id.StepCountView);
         accelXView = (TextView) findViewById(R.id.AccelXView);
@@ -181,27 +241,31 @@ public class MainActivity extends Activity {
         if(Context_Service.isAccelerometerRunning())
         	accelStarted = true;
         
-        vizButton = (CompoundButton) findViewById(R.id.VisualizeButton);
-        ((CompoundButton)vizButton).setOnCheckedChangeListener(new OnCheckedChangeListener() {
-        	/*
+        //button to start the ContextActivity visualization activity
+        vizButton = (Button) findViewById(R.id.VisualizeButton);
+        vizButton.setOnClickListener(new View.OnClickListener() {
+        	
         	@Override
         	public void onClick(View v) {
         	Intent intent = new Intent(getApplicationContext(),ContextActivity.class);
         	intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         	startActivity(intent);
-        	}*/
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView,
-					boolean isChecked) {
-	        	Intent intent = new Intent(getApplicationContext(),ContextActivity.class);
-	        	intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-	        	if(!isChecked){
-	        		startActivity(intent);
-	        	}
-			}
-        }); 
+        	}
+        	
+        });
         
-        //Set the buttons and the text accordingly
+        //this will display the activity selected by the spinner
+        vizInlineView = (RelativeLayout) findViewById(R.id.VisualizeInlineView);
+        
+        //this will select an activity to display in the above view
+        //based off of STREAMS in PickerActivity
+        vizInlineSpinner = (Spinner) findViewById(R.id.VisualizeInline);
+        
+        ArrayAdapter a = new ArrayAdapter(this, android.R.layout.simple_spinner_item, STREAMS.enumValues());
+        a.setDropDownViewResource(android.R.layout.simple_gallery_item);
+        vizInlineSpinner.setAdapter(a);
+        vizInlineSpinner.setOnItemSelectedListener(this);
+        
         accelButton = (ToggleButton) findViewById(R.id.StartButton);
         accelButton.setChecked(accelStarted);
         accelButton.setOnCheckedChangeListener(
@@ -212,7 +276,6 @@ public class MainActivity extends Activity {
         		    		startAccelerometer();
         		    	else
         		    		stopAccelerometer();
-        		    	//accelStarted = !accelStarted;
         		    }
         		}
         );
@@ -336,5 +399,70 @@ public class MainActivity extends Activity {
     	if(mIsBound) {
     		sendMessageToService(Context_Service.MSG_STOP_ACCELEROMETER);
     	}
+    }
+    
+    /*
+     * 
+     * Implementation of IDataObservable..see that for method details
+     * 
+     */
+    
+    Map<IDataObserverCache, List<STREAMS>> observers = new HashMap<IDataObserverCache, List<STREAMS>>();
+  	
+  	@Override
+  	public void register(IDataObserverCache observer, STREAMS... streams) {
+  		if(observers.containsKey(observer)){
+  			List<STREAMS> observerStream = observers.get(observer);
+  			for(STREAMS stream: streams){//could have used a set instead
+  				if(!observerStream.contains(stream))
+  					observerStream.add(stream);
+  			}
+  		}
+  		else observers.put(observer, Arrays.asList(streams));
+  	}
+
+  	@Override
+  	public void detach(IDataObserverCache observer, STREAMS... streams) {
+  		if(observers.containsKey(observer)){
+  			List<STREAMS> observerStream = observers.get(observer);
+  			for(STREAMS stream: streams){
+  				observerStream.remove(stream);
+  			}
+  		}
+  	}
+
+  	@Override
+  	public void notifyWithData(STREAMS stream, Object data) {
+  		for(IDataObserverCache obs: observers.keySet()){
+  			if(observers.get(obs).contains(stream)){
+  				obs.receive(stream, data);
+  			}
+  		}
+  	}
+ 
+	private DataChartView innerChart;
+
+  	public void onItemSelected(AdapterView<?> parent, View view, 
+            int pos, long id) {
+  		
+		vizInlineView.removeAllViews();	
+		Object b = parent.getItemAtPosition(pos);
+		STREAMS stream = STREAMS.valueOf(parent.getItemAtPosition(pos).toString());
+		
+		innerChart = stream.StreamToChartView(this, this);
+		vizInlineView.addView(innerChart);
+		vizInlineView.setClickable(true);
+		vizInlineView.setOnClickListener(new OnClickListener(){
+			@Override
+			public void onClick(View v) {
+			}
+			
+		});
+    }
+
+    public void onNothingSelected(AdapterView<?> parent) {
+    	vizInlineView.removeAllViews();
+    	innerChart = null;
+    	MainActivity.this.vizInlineView.setVisibility(RelativeLayout.GONE);
     }
 }

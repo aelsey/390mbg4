@@ -7,6 +7,9 @@
     <string name="activity">Activity</string>
     <string name="accel">Accelerometer</string>
     <string name="steps">Steps</string>
+    
+ 	<string name="viz_spinner_text">Select Visualization</string>
+ 	<string name="viz_menu_text">Vizualization Menu</string>
     <string name="nullvalue">&#8212;.&#8212;&#8212;</string>
     <string name="action_pick">Select Activity</string>
     <string name="x">X</string>
