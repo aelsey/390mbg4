@@ -15,4 +15,17 @@
     <string name="x">X</string>
     <string name="y">Y</string>
     <string name="z">Z</string>
+    
+    <string name="data_collect">Audio Collection</string>
+    <string name="record">Record</string>
+    <string name="stop">Stop</string>
+    <string name="status_speech">Speech Status</string>
+    <string name="mic_button">Microphone</string>
+    
+    
+    <string name="speech">Speech</string>
+    <string name="mic_started">Microphone Started</string>
+    <string name="mic_stopped">Microphone Stopped</string>
+    <string name="silence">Silence</string>
+    <string name="noise">Noise</string>
 </resources>

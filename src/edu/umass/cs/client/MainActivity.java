@@ -75,10 +75,12 @@ public class MainActivity extends Activity implements IDataObservable, OnItemSel
 	 * Various UI components 
 	 */
 	private TextView accelXView, accelYView, accelZView;
-	private TextView statusView, stepsView;
+	private TextView statusView, stepsView, speechStatusView;
 
 	ImageView activityView;
 	private CompoundButton accelButton;
+	
+	private CompoundButton speechButton;
 	
 	/**
 	 * Messenger service for exchanging messages with the background service
@@ -142,12 +144,32 @@ public class MainActivity extends Activity implements IDataObservable, OnItemSel
             		Double d = b.getDouble(stream.toString());
             		MainActivity.this.notifyWithData(stream, msg.getData().getDouble(stream.toString()));
             	}
+            	break;
             }
             case Context_Service.MSG_Dev:
             {
             	MainActivity.this.notifyWithData(STREAMS.xDEV, msg.getData().getDouble(STREAMS.xDEV.toString()));
             	MainActivity.this.notifyWithData(STREAMS.yDEV, msg.getData().getDouble(STREAMS.yDEV.toString()));
             	MainActivity.this.notifyWithData(STREAMS.zDEV, msg.getData().getDouble(STREAMS.zDEV.toString()));
+            	break;
+            }
+            case Context_Service.MSG_MICROPHONE_STARTED:
+            {
+            	MainActivity.this.speechStatusView.setText(getString(R.string.mic_started));
+            	break;
+            }
+            case Context_Service.MSG_MICROPHONE_STOPPED:
+            {
+            	MainActivity.this.speechStatusView.setText(getString(R.string.mic_stopped));
+            	break;
+            }
+            case Context_Service.MSG_SPEECH_STATUS:
+            {
+            	if(Context_Service.isMicrophoneRunning()){
+	            	String speechStatus = msg.getData().getString("speechStatus");
+	            	MainActivity.this.speechStatusView.setText(speechStatus);
+            	}
+	            break;
             }
             case Context_Service.MSG_ACCELEROMETER_STARTED:
             {
@@ -220,6 +242,8 @@ public class MainActivity extends Activity implements IDataObservable, OnItemSel
         activityView = (ImageView) findViewById(R.id.ActivityImageView);
 
         statusView = (TextView) findViewById(R.id.StatusView);
+        speechStatusView = (TextView) findViewById(R.id.SpeechStatusView);
+        findViewById(R.id.StatusLayout).setVisibility(RelativeLayout.GONE);
         stepsView = (TextView) findViewById(R.id.StepCountView);
         accelXView = (TextView) findViewById(R.id.AccelXView);
         accelYView = (TextView) findViewById(R.id.AccelYView);
@@ -260,11 +284,15 @@ public class MainActivity extends Activity implements IDataObservable, OnItemSel
         //this will select an activity to display in the above view
         //based off of STREAMS in PickerActivity
         vizInlineSpinner = (Spinner) findViewById(R.id.VisualizeInline);
-        
+        //vizInlineSpinner.setVisibility(RelativeLayout.GONE);
+        findViewById(R.id.VisualizeMenuLayout).setVisibility(RelativeLayout.GONE);
+        vizInlineView.setVisibility(RelativeLayout.GONE);
         ArrayAdapter a = new ArrayAdapter(this, android.R.layout.simple_spinner_item, STREAMS.enumValues());
         a.setDropDownViewResource(android.R.layout.simple_gallery_item);
         vizInlineSpinner.setAdapter(a);
         vizInlineSpinner.setOnItemSelectedListener(this);
+        
+        //statusView.setVisibility(LinearLayout.GONE);
         
         accelButton = (ToggleButton) findViewById(R.id.StartButton);
         accelButton.setChecked(accelStarted);
@@ -280,6 +308,26 @@ public class MainActivity extends Activity implements IDataObservable, OnItemSel
         		}
         );
         
+        speechButton = (ToggleButton) findViewById(R.id.SpeechButton);
+        speechButton.setChecked(false);
+        speechButton.setOnCheckedChangeListener(
+        		new OnCheckedChangeListener() {
+        		    public void onCheckedChanged(CompoundButton btn,boolean isChecked) {
+        		    	if(!mIsBound) {
+        		    		doBindService();
+        		    		//In this case, start accelerometer won't work because service is not bound
+        		    		speechButton.setChecked(false);
+        		    		MainActivity.this.speechStatusView.setText("Binding To Service");
+        		    	}
+        		    	if(mIsBound){
+	        		    	if(isChecked)
+	        		    		sendMessageToService(Context_Service.MSG_START_MICROPHONE);
+	        		    	else
+	        		    		sendMessageToService(Context_Service.MSG_STOP_MICROPHONE);
+	        		    	}
+        		    	}
+        		}
+        );
         
     }
     
@@ -305,6 +353,7 @@ public class MainActivity extends Activity implements IDataObservable, OnItemSel
             if (mService != null) {
             	try {
                     Message msg = Message.obtain(null, message);
+                    int val = msg.what;
                     msg.replyTo = mMessenger;
                     mService.send(msg);
                 } catch (RemoteException e) {

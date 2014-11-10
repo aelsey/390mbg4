@@ -18,32 +18,40 @@ public final class R {
         public static final int walking=0x7f020004;
     }
     public static final class id {
-        public static final int AccelLayout=0x7f06000e;
-        public static final int AccelXView=0x7f060010;
-        public static final int AccelYView=0x7f060012;
-        public static final int AccelZView=0x7f060014;
-        public static final int ActivityImageView=0x7f06000b;
-        public static final int ActivityLayout=0x7f06000a;
+        public static final int AccelLayout=0x7f060012;
+        public static final int AccelXView=0x7f060014;
+        public static final int AccelYView=0x7f060016;
+        public static final int AccelZView=0x7f060018;
+        public static final int ActivityImageView=0x7f06000f;
+        public static final int ActivityLayout=0x7f06000e;
         public static final int MainLayout=0x7f060000;
+        public static final int RecordButton=0x7f06001c;
+        public static final int RecordButtonLayout=0x7f06001b;
+        public static final int SpeechButton=0x7f060005;
+        public static final int SpeechButtonLayout=0x7f060004;
+        public static final int SpeechStatusLayout=0x7f06000c;
+        public static final int SpeechStatusView=0x7f06000d;
         public static final int StartButton=0x7f060003;
         public static final int StartButtonLayout=0x7f060002;
-        public static final int StatusLayout=0x7f06000c;
-        public static final int StatusView=0x7f06000d;
-        public static final int StepCountView=0x7f060009;
-        public static final int StepsLayout=0x7f060008;
+        public static final int StatusLayout=0x7f060010;
+        public static final int StatusView=0x7f060011;
+        public static final int StepCountView=0x7f06000b;
+        public static final int StepsLayout=0x7f06000a;
         public static final int TopHorizontalSpaceView=0x7f060001;
-        public static final int VisualizeButton=0x7f060005;
-        public static final int VisualizeInline=0x7f060007;
-        public static final int VisualizeInlineView=0x7f060015;
-        public static final int VisualizeMenuLayout=0x7f060004;
-        public static final int VisualizeSpinnerLayout=0x7f060006;
-        public static final int XView=0x7f06000f;
-        public static final int YView=0x7f060011;
-        public static final int ZView=0x7f060013;
-        public static final int action_pick=0x7f060016;
+        public static final int VisualizeButton=0x7f060007;
+        public static final int VisualizeInline=0x7f060009;
+        public static final int VisualizeInlineView=0x7f060019;
+        public static final int VisualizeMenuLayout=0x7f060006;
+        public static final int VisualizeSpinnerLayout=0x7f060008;
+        public static final int XView=0x7f060013;
+        public static final int YView=0x7f060015;
+        public static final int ZView=0x7f060017;
+        public static final int action_pick=0x7f06001d;
+        public static final int root=0x7f06001a;
     }
     public static final class layout {
         public static final int main=0x7f030000;
+        public static final int record=0x7f030001;
     }
     public static final class menu {
         public static final int context_menu=0x7f050000;
@@ -53,9 +61,19 @@ public final class R {
         public static final int action_pick=0x7f040009;
         public static final int activity=0x7f040003;
         public static final int app_name=0x7f040000;
+        public static final int data_collect=0x7f04000d;
+        public static final int mic_button=0x7f040011;
+        public static final int mic_started=0x7f040013;
+        public static final int mic_stopped=0x7f040014;
+        public static final int noise=0x7f040016;
         public static final int nullvalue=0x7f040008;
+        public static final int record=0x7f04000e;
+        public static final int silence=0x7f040015;
+        public static final int speech=0x7f040012;
         public static final int status=0x7f040002;
+        public static final int status_speech=0x7f040010;
         public static final int steps=0x7f040005;
+        public static final int stop=0x7f04000f;
         /**  Strings shown in UI  
          */
         public static final int visualize=0x7f040001;

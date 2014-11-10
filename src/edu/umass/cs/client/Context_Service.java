@@ -1,11 +1,6 @@
 package edu.umass.cs.client;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import lecho.lib.hellocharts.view.LineChartView;
 
@@ -29,6 +24,9 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import edu.umass.cs.accelerometer.*;
 import edu.umass.cs.client.PickerActivity.STREAMS;
+import edu.umass.cs.client.voice.FeaturizeWeka;
+import edu.umass.cs.client.voice.MicrophoneRecorder;
+import edu.umass.cs.client.voice.MicrophoneRecorder.MicrophoneListener;
 import edu.umass.cs.client.widget.DataChartView;
 import edu.umass.cs.client.widget.LineDataChartView;
 import edu.umass.cs.client.widget.PieDataChartView;
@@ -42,7 +40,7 @@ import weka.classifiers.*;
  * @author CS390MB
  * 
  */
-public class Context_Service extends Service implements SensorEventListener, IDataObservable{
+public class Context_Service extends Service implements SensorEventListener, IDataObservable, MicrophoneListener {
 	
 	/**
 	 * Notification manager to display notifications
@@ -75,6 +73,15 @@ public class Context_Service extends Service implements SensorEventListener, IDa
 	static final int MSG_FFT = 0xB;
 	static final int MSG_Dev = 0xF;
 	
+	static final int MSG_START_MICROPHONE = 20;
+	static final int MSG_STOP_MICROPHONE = 21;
+	static final int MSG_MICROPHONE_STARTED = 22;
+	static final int MSG_MICROPHONE_STOPPED = 23;
+	static final int MSG_SPEECH_STATUS = 24;
+	
+	private static double speechThreshold = .4;
+	//private static double noiseThreshold = .1;
+	
 	/**
 	* Class to orient axis
 	*/
@@ -87,6 +94,7 @@ public class Context_Service extends Service implements SensorEventListener, IDa
 	static Context_Service sInstance = null;
 	private static boolean isRunning = false;
 	private static boolean isAccelRunning = false;
+	private static boolean isMicrophoneRunning = false;
 	private static final int NOTIFICATION_ID = 777;
 	
 	private AccelReadingCache cache = null;
@@ -163,6 +171,21 @@ public class Context_Service extends Service implements SensorEventListener, IDa
 				extractor = null;
 				filter = null;
 				break;
+			}
+			case MSG_START_MICROPHONE: {
+				MicrophoneRecorder recorder = MicrophoneRecorder.getInstance();
+				recorder.registerListener(Context_Service.this);
+				recorder.startRecording();
+				isMicrophoneRunning = !isMicrophoneRunning;
+				Context_Service.this.sendMessageToUI(Context_Service.MSG_MICROPHONE_STARTED);
+				break;
+			}
+			case MSG_STOP_MICROPHONE: {
+				MicrophoneRecorder recorder = MicrophoneRecorder.getInstance();
+				recorder.unregisterListener(Context_Service.this);
+				recorder.stopRecording();
+				isMicrophoneRunning = !isMicrophoneRunning;
+				Context_Service.this.sendMessageToUI(Context_Service.MSG_MICROPHONE_STOPPED);
 			}
 			default:
 				super.handleMessage(msg);
@@ -254,7 +277,19 @@ public class Context_Service extends Service implements SensorEventListener, IDa
 		}
 	}
 	
-	
+	private void sendSpeechStatusToUI(String speechStatus) {
+		for (int i = mClients.size()-1; i>=0; i--) {
+			try {
+				Bundle b = new Bundle();
+				b.putString("speechStatus", speechStatus);
+				Message msg = Message.obtain(null, MSG_SPEECH_STATUS);
+				msg.setData(b);
+				mClients.get(i).send(msg);
+			} catch (RemoteException e) {
+				mClients.remove(i);
+			}
+		}
+	}
 
 	/**
 	 * On Binding, return a binder
@@ -320,6 +355,10 @@ public class Context_Service extends Service implements SensorEventListener, IDa
 	protected static boolean isAccelerometerRunning() {
 		return isAccelRunning;
 	}
+
+    protected static boolean isMicrophoneRunning() {
+    	return isMicrophoneRunning;
+    }
 
 	@Override
 	public void onCreate() {
@@ -494,5 +533,38 @@ public class Context_Service extends Service implements SensorEventListener, IDa
 				obs.receive(stream, data);
 			}
 		}
+	}
+	
+	@Override
+	//This method was declared in an interface in MicrophoneRecorder
+	public void microphoneBuffer(short[] buffer, int window_size) {
+	//You will break a chunk of one-second-long samples into multiple 25-ms windows. Think about how many of 25-ms windows you will get for a second. 
+		int voiced = 0;
+		int frame_size = window_size/40; //might skip a few frames, but not a big deal probably
+		int total_frames = 40;
+		int frame_count = 10;
+		int speech_count = 0;
+		for(int k=0;k<window_size;k+=(frame_size/frame_count*total_frames)){
+            double[] features = FeaturizeWeka.ComputerFeaturesForFrameForAssignment4(buffer, frame_size, k);
+            Object[] oFeatures = new Object[features.length];
+            int count = 0;
+            for(double d: features)
+            	oFeatures[count++] = (Double) d;
+            
+            try
+            {
+            	if((int)SpeechClassifier.classify(oFeatures)==0)
+            		speech_count +=1;
+            }
+            catch(Exception ex)
+            {
+            	
+            }
+        }
+		double threshold = ((double)speech_count)/((double)frame_count);
+		if(threshold>Context_Service.speechThreshold)
+			sendSpeechStatusToUI(STREAMS.SPEECH.toString());
+		else
+			sendSpeechStatusToUI(STREAMS.SILENCE.toString());
 	}
 }

@@ -1,0 +1,130 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (javaClasses.cpp:126), pid=2664, tid=2376
+#  fatal error: Invalid layout of preloaded class
+#
+# JRE version:  (8.0_20-b26) (build )
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (25.20-b23 mixed mode windows-amd64 compressed oops)
+# Failed to write core dump. Minidumps are not enabled by default on client versions of Windows
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.sun.com/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000000002710800):  JavaThread "Unknown thread" [_thread_in_vm, id=2376, stack(0x0000000000ec0000,0x0000000000fc0000)]
+
+Stack: [0x0000000000ec0000,0x0000000000fc0000]
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [jvm.dll+0x3152fa]
+V  [jvm.dll+0x265d03]
+V  [jvm.dll+0x266943]
+V  [jvm.dll+0x25e1e6]
+V  [jvm.dll+0x5e64c]
+V  [jvm.dll+0x5e743]
+V  [jvm.dll+0x7316a]
+V  [jvm.dll+0x734c8]
+V  [jvm.dll+0xe3937]
+V  [jvm.dll+0xe3cc6]
+V  [jvm.dll+0x1f89d7]
+V  [jvm.dll+0x229fc4]
+V  [jvm.dll+0x14c6f1]
+C  [javaw.exe+0x20c6]
+C  [javaw.exe+0xc9eb]
+C  [javaw.exe+0xca7f]
+C  [KERNEL32.DLL+0x1842]
+C  [ntdll.dll+0x3f9d1]
+
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+
+Other Threads:
+
+=>0x0000000002710800 (exited) JavaThread "Unknown thread" [_thread_in_vm, id=2376, stack(0x0000000000ec0000,0x0000000000fc0000)]
+
+VM state:not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread: None
+
+GC Heap History (0 events):
+No events
+
+Deoptimization events (0 events):
+No events
+
+Internal exceptions (0 events):
+No events
+
+Events (10 events):
+Event: 0.064 loading class java/lang/CharSequence done
+Event: 0.064 loading class java/lang/String done
+Event: 0.064 loading class java/lang/Class
+Event: 0.065 loading class java/lang/reflect/AnnotatedElement
+Event: 0.065 loading class java/lang/reflect/AnnotatedElement done
+Event: 0.065 loading class java/lang/reflect/GenericDeclaration
+Event: 0.065 loading class java/lang/reflect/GenericDeclaration done
+Event: 0.065 loading class java/lang/reflect/Type
+Event: 0.065 loading class java/lang/reflect/Type done
+Event: 0.066 loading class java/lang/Class done
+
+
+Dynamic libraries:
+0x000007f6ce210000 - 0x000007f6ce244000 	C:\Program Files\Java\jre1.8.0_20\bin\javaw.exe
+0x000007fd916f0000 - 0x000007fd918ae000 	C:\Windows\SYSTEM32\ntdll.dll
+0x000007fd8f020000 - 0x000007fd8f157000 	C:\Windows\system32\KERNEL32.DLL
+0x000007fd8e940000 - 0x000007fd8ea34000 	C:\Windows\system32\KERNELBASE.dll
+0x000007fd906c0000 - 0x000007fd9079e000 	C:\Windows\system32\ADVAPI32.dll
+0x000007fd90c40000 - 0x000007fd90d8c000 	C:\Windows\system32\USER32.dll
+0x000007fd8ad40000 - 0x000007fd8afaa000 	C:\Windows\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.9200.16579_none_418ab7ef718b27ef\COMCTL32.dll
+0x000007fd90440000 - 0x000007fd904e5000 	C:\Windows\system32\msvcrt.dll
+0x000007fd909c0000 - 0x000007fd90a08000 	C:\Windows\SYSTEM32\sechost.dll
+0x000007fd90d90000 - 0x000007fd90ed5000 	C:\Windows\system32\RPCRT4.dll
+0x000007fd91190000 - 0x000007fd912d1000 	C:\Windows\system32\GDI32.dll
+0x000007fd8ec00000 - 0x000007fd8ec39000 	C:\Windows\system32\IMM32.DLL
+0x000007fd8ead0000 - 0x000007fd8ebe6000 	C:\Windows\system32\MSCTF.dll
+0x0000000055ec0000 - 0x0000000055f92000 	C:\Program Files\Java\jre1.8.0_20\bin\msvcr100.dll
+0x0000000056200000 - 0x0000000056a58000 	C:\Program Files\Java\jre1.8.0_20\bin\server\jvm.dll
+0x000007fd7b880000 - 0x000007fd7b889000 	C:\Windows\SYSTEM32\WSOCK32.dll
+0x000007fd83500000 - 0x000007fd83520000 	C:\Windows\SYSTEM32\WINMM.dll
+0x000007fd912e0000 - 0x000007fd912e7000 	C:\Windows\system32\PSAPI.DLL
+0x000007fd914c0000 - 0x000007fd91518000 	C:\Windows\system32\WS2_32.dll
+0x000007fd833e0000 - 0x000007fd83413000 	C:\Windows\SYSTEM32\WINMMBASE.dll
+0x000007fd8ede0000 - 0x000007fd8ede9000 	C:\Windows\system32\NSI.dll
+0x000007fd8e6f0000 - 0x000007fd8e73f000 	C:\Windows\SYSTEM32\cfgmgr32.dll
+0x000007fd8ea40000 - 0x000007fd8ea62000 	C:\Windows\system32\DEVOBJ.dll
+0x0000000056110000 - 0x000000005611f000 	C:\Program Files\Java\jre1.8.0_20\bin\verify.dll
+0x00000000560e0000 - 0x0000000056108000 	C:\Program Files\Java\jre1.8.0_20\bin\java.dll
+0x00000000560c0000 - 0x00000000560d6000 	C:\Program Files\Java\jre1.8.0_20\bin\zip.dll
+0x000007fd7b370000 - 0x000007fd7b4d3000 	C:\Windows\SYSTEM32\dbghelp.dll
+
+VM Arguments:
+jvm_args: -Dfile.encoding=Cp1252 -Xbootclasspath:C:\Users\aje\Downloads\adt-bundle-windows-x86_64-20140702\adt-bundle-windows-x86_64-20140702\sdk\platforms\android-21\android.jar 
+java_command: weka.classifiers.WekaWrapperForSpeech
+java_class_path (initial): C:\Users\aje\workspace\390mbg4-assignment4\bin\classes;C:\Program Files\Weka-3-6\weka.jar;C:\Users\aje\workspace\390mbg4-assignment4\libs\hellocharts-library-1.0.jar;C:\Users\aje\workspace\390mbg4-assignment4\libs\commons-net-ftp-2.0.jar;C:\Users\aje\workspace\390mbg4-assignment4\libs\android-support-v4.jar;C:\Users\aje\workspace\390mbg4-assignment4\libs\BioHarnessBT.jar;C:\Users\aje\workspace\390mbg4-assignment4\libs\aware1.0.jar
+Launcher Type: SUN_STANDARD
+
+Environment Variables:
+PATH=C:/Program Files/Java/jre1.8.0_20/bin/server;C:/Program Files/Java/jre1.8.0_20/bin;C:/Program Files/Java/jre1.8.0_20/lib/amd64;C:\ProgramData\Oracle\Java\javapath;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\Windows Live\Shared;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\Intel\OpenCL SDK\2.0\bin\x86;C:\Program Files (x86)\Intel\OpenCL SDK\2.0\bin\x64;C:\Program Files (x86)\Git\cmd;C:\Program Files (x86)\scala\bin;C:\Users\aje\Downloads\adt-bundle-windows-x86_64-20140702\adt-bundle-windows-x86_64-20140702\eclipse;
+USERNAME=aje
+OS=Windows_NT
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 58 Stepping 9, GenuineIntel
+
+
+
+---------------  S Y S T E M  ---------------
+
+OS: Windows 8 , 64 bit Build 9200 
+
+CPU:total 4 (2 cores per cpu, 2 threads per core) family 6 model 58 stepping 9, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, avx, clmul, erms, ht, tsc, tscinvbit, tscinv
+
+Memory: 4k page, physical 4077240k(1137952k free), swap 7616184k(3473924k free)
+
+vm_info: Java HotSpot(TM) 64-Bit Server VM (25.20-b23) for windows-amd64 JRE (1.8.0_20-b26), built on Jul 30 2014 13:51:23 by "java_re" with MS VC++ 10.0 (VS2010)
+
+time: Mon Nov 10 15:44:49 2014
+elapsed time: 0 seconds (0d 0h 0m 0s)
+

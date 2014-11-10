@@ -47,7 +47,12 @@ public class PickerActivity extends ListActivity {
 		//stationary, walking, and running are not menu options, but can be graphed
 		//activity is a menu optio, but it is not graphed
 	public enum STREAMS {
-//		,VOICE
+		VOICE,
+		
+		SPEECH,
+		NOISE,
+		SILENCE,
+		
 		ACCX
 		,ACCY
 		,ACCZ,
@@ -82,6 +87,7 @@ public class PickerActivity extends ListActivity {
 		@SuppressWarnings("unchecked")
 		public static STREAMS[] enumValues(){
 			STREAMS[] retVal = {
+					VOICE,
 					ACCX
 					,ACCY
 					,ACCZ,
@@ -124,10 +130,13 @@ public class PickerActivity extends ListActivity {
 		//used in graphing classes
 		public int StreamToColor(){
 			switch(this){
+				case SPEECH:
 				case xDEV:
 				case ACCX: return Color.GREEN;
+				case NOISE:
 				case yDEV:
 				case ACCY: return Color.MAGENTA;
+				case SILENCE:
 				case zDEV:
 				case ACCZ: return Color.CYAN;
 				
@@ -156,6 +165,8 @@ public class PickerActivity extends ListActivity {
 		//used in MainActivity and ContextActivity for widget instantiation
 		public DataChartView StreamToChartView(Context context, IDataObservable obs){
 			switch(this){
+				case VOICE:  
+					return (DataChartView) new SynchronousPieDataChartView(context, obs, SPEECH, NOISE, SILENCE);
 				case DEVIATION:
 					return (DataChartView) new FastLineDataChartView(context, obs, xDEV, yDEV, zDEV);
 				case ACTIVITY:

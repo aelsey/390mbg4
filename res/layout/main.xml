@@ -44,10 +44,36 @@
     </RelativeLayout>
     
     <RelativeLayout
-        android:id="@+id/VisualizeMenuLayout"
+    	android:id="@+id/SpeechButtonLayout"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/StartButtonLayout"
+        android:layout_centerHorizontal="true"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        android:padding="5dip">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="40dip"
+            android:padding="10dip"
+            android:text="@string/mic_button"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ToggleButton
+            android:id="@+id/SpeechButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="30dip" />
+    </RelativeLayout>
+    <RelativeLayout
+        android:id="@+id/VisualizeMenuLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/SpeechButtonLayout"
         android:layout_centerHorizontal="true"
         android:background="#FFFFFF"
         android:orientation="horizontal"
@@ -138,12 +164,43 @@
             android:textStyle="bold" />
     </RelativeLayout>
     
+    <RelativeLayout
+        android:id="@+id/SpeechStatusLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/StepsLayout"
+        android:layout_centerHorizontal="true"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        android:padding="3dip" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="20dip"
+            android:padding="10dip"
+            android:text="@string/status_speech"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/SpeechStatusView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:padding="10dip"
+            android:text=""
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
     
     <RelativeLayout
         android:id="@+id/ActivityLayout"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/StepsLayout"
+        android:layout_below="@id/SpeechStatusLayout"
         android:layout_centerHorizontal="true"
         android:background="#FFFFFF"
         android:orientation="horizontal"
