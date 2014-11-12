@@ -4,7 +4,7 @@ public class SpeechClassifier
 {
 	  public static double classify(Object[] i)
 	    throws Exception {
-
+	    	
 	    double p = Double.NaN;
 	    p = SpeechDetector.N6df6e48a0(i);
 	    return p;
